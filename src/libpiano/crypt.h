@@ -23,12 +23,7 @@ THE SOFTWARE.
 
 #pragma once
 
-#ifdef __FreeBSD__
-#define _GCRYPT_IN_LIBGCRYPT
-#endif
-#include <gcrypt.h>
+#include "../../melodica/protocol/blowfish.h"
 
-char *PianoDecryptString (gcry_cipher_hd_t, const char * const,
-		size_t * const);
-char *PianoEncryptString (gcry_cipher_hd_t, const char *);
-
+char *PianoDecryptString (const MelodicaBlowfish *, const char *, size_t *);
+char *PianoEncryptString (const MelodicaBlowfish *, const char *);

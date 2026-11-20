@@ -29,7 +29,7 @@ THE SOFTWARE.
 #ifdef __FreeBSD__
 #define _GCRYPT_IN_LIBGCRYPT
 #endif
-#include <gcrypt.h>
+#include "../../melodica/protocol/blowfish.h"
 
 /* this is our public API; don't expect this api to be stable as long as
  * pandora does not provide a stable api
@@ -125,7 +125,7 @@ typedef struct PianoGenreCategory {
 } PianoGenreCategory_t;
 
 typedef struct PianoPartner {
-	gcry_cipher_hd_t in, out;
+	MelodicaBlowfish in, out;
 	char *authToken, *device, *user, *password;
 	unsigned int id;
 } PianoPartner_t;

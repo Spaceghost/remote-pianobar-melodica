@@ -113,7 +113,7 @@ static bool bar_l10n_load_file (const char *path, BarL10nPair_t **pairs,
 			continue;
 		}
 		char *eq = strchr (s, '=');
-		if (!eq) {
+		if (!eq || eq == s) {
 			continue;
 		}
 		*eq = '\0';
@@ -128,9 +128,6 @@ static bool bar_l10n_load_file (const char *path, BarL10nPair_t **pairs,
 		char *ve = val + strlen (val);
 		while (ve > val && (ve[-1] == '\n' || ve[-1] == '\r')) {
 			*--ve = '\0';
-		}
-		if (*s == '\0') {
-			continue;
 		}
 		if (!bar_l10n_append_pair (pairs, n, cap, s, val)) {
 			fclose (f);

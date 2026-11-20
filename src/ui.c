@@ -23,6 +23,7 @@ THE SOFTWARE.
 
 /* everything that interacts with the user */
 
+#include "../melodica/protocol/relay.h"
 #include "config.h"
 
 #include <stdio.h>
@@ -229,7 +230,7 @@ static bool temporaryCurlError (const CURLcode code) {
 	assert (httpret == CURLE_OK);
 
 static CURLcode BarPianoHttpRequest (CURL * const http,
-		const BarSettings_t * const settings, PianoRequest_t * const req) {
+		const BarSettings_t * const settings, PianoRequest_t * const req, char *access) {
 	buffer buffer = {NULL, 0};
 	_Atomic sig_atomic_t lint = 0;
 	_Atomic sig_atomic_t *prevint;
@@ -238,11 +239,9 @@ static CURLcode BarPianoHttpRequest (CURL * const http,
 	assert (settings->rpcHost != NULL);
 	assert (settings->rpcTlsPort != NULL);
 	assert (req->urlPath != NULL);
-	int ret = snprintf (url, sizeof (url), "%s://%s:%s%s",
-		req->secure ? "https" : "http",
-		settings->rpcHost,
-		req->secure ? settings->rpcTlsPort : "80",
-		req->urlPath);
+	const char *relayQuery = NULL;
+	int ret = MelodicaTunerUrl(url, sizeof(url), settings->rpcHost, settings->rpcTlsPort,
+			req->urlPath, req->secure, settings->partnerUser, &relayQuery);
 	assert (ret >= 0 && ret <= (int) sizeof (url));
 	log_network_request(url);
 
@@ -297,6 +296,7 @@ static CURLcode BarPianoHttpRequest (CURL * const http,
 
 	struct curl_slist *list = NULL;
 	list = curl_slist_append (list, "Content-Type: text/plain");
+	list = MelodicaRequestHeaders(http, list, relayQuery, access);
 	setAndCheck (CURLOPT_HTTPHEADER, list);
 
 	unsigned int retry = 0;
@@ -381,7 +381,7 @@ bool BarUiPianoCall (BarApp_t * const app, const PianoRequestType_t type,
 			goto cleanup;
 		}
 
-		wRetLocal = BarPianoHttpRequest (app->http, &app->settings, &req);
+		wRetLocal = BarPianoHttpRequest (app->http, &app->settings, &req, app->melodicaAccess);
 		if (wRetLocal == CURLE_ABORTED_BY_CALLBACK) {
 			BarUiMsg (&app->settings, MSG_NONE, "Interrupted.\n");
 			goto cleanup;

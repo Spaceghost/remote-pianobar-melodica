@@ -369,9 +369,10 @@ test-ci-local:
 # Run static analysis (requires cppcheck)
 # Suppressions: .cppcheck-suppress (miniaudio.h and project-specific false positives)
 # PIANOBAR_LINT_C omits miniaudio_impl.c (vendored wrapper, noisy configs)
+# Different cppcheck versions recognize different entries in the shared suppression list.
 lint:
 	${SILENTECHO} "   LINT  Running static analysis..."
-	${SILENTCMD}cppcheck --enable=all --max-configs=3 --suppress=missingIncludeSystem --suppress=unusedFunction \
+	${SILENTCMD}cppcheck --enable=all --suppress=unmatchedSuppression --max-configs=3 --suppress=missingIncludeSystem --suppress=unusedFunction \
 		--suppress=toomanyconfigs --suppress=normalCheckLevelMaxBranches --suppress=checkersReport \
 		--inline-suppr --error-exitcode=1 --suppressions-list=.cppcheck-suppress \
 		-I ${LIBPIANO_INCLUDE} ${PIANOBAR_LINT_C} ${LIBPIANO_DIR}/*.c

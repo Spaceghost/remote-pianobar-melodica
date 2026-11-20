@@ -1,3 +1,9 @@
+# Remote Pianobar for Melodica
+
+On Ubuntu 24.04 (x86-64), install the release `.deb` and run `melodica-remote-pianobar`. The packaged event command lives at `/usr/share/melodica-remote-pianobar/spaceghost-event`.
+
+The native player and its existing web remote use Melodica for tuner requests. To record playback at https://spacegho.st/scrobble/, set MELODICA_SCROBBLE_TOKEN for the player process to a client token from your account, and set event_command in the pianobar config to the absolute path of melodica/spaceghost-event. If you already use an event command, set MELODICA_NEXT_EVENT to its absolute path. The hook records qualifying finished songs and retries temporary delivery failures. It can be disconnected by removing the token.
+
 # pianobar
 
 [![GitHub Release](https://img.shields.io/github/release/mr-light-show/remote-pianobar.svg)](https://github.com/mr-light-show/remote-pianobar/releases)

@@ -1,0 +1,1 @@
+Melodica protocol code is vendored from Spaceghost/melodica.h at 4447943dd0c43b1b288f963f542502bb772e5802 (compat/blowfish.c, blowfish.h and blowfish_pi.h). See THIRD_PARTY_NOTICES.md and LICENSE.libpiano. wire.c adapts those primitives to caller-owned byte buffers.

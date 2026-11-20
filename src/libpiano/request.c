@@ -537,7 +537,7 @@ PianoReturn_t PianoRequest (PianoHandle_t *ph, PianoRequest_t *req,
 	/* json to string */
 	jsonSendBuf = json_object_to_json_string (j);
 	if (encrypted) {
-		if ((req->postData = PianoEncryptString (ph->partner.out,
+		if ((req->postData = PianoEncryptString (&ph->partner.out,
 				jsonSendBuf)) == NULL) {
 			ret = PIANO_RET_OUT_OF_MEMORY;
 		}

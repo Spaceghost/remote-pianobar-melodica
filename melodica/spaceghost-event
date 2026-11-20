@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+"""Optional remote-pianobar event hook for a personal Spaceghost Scrobbles account."""
+import fcntl
+import hashlib
+import json
+import os
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+from listenbrainz import ListenBrainzClient, listen_counts
+
+
+def handle(event, data):
+    token = os.environ.get("MELODICA_SCROBBLE_TOKEN", "").strip()
+    if not token or event not in ("songstart", "songfinish"):
+        return
+    fields = dict(line.split("=", 1) for line in data.decode("utf-8", "replace").splitlines() if "=" in line)
+    artist, title = fields.get("artist", ""), fields.get("title", "")
+    if not artist or not title:
+        return
+    root = Path(os.environ.get("XDG_STATE_HOME") or Path.home()/".local/state") / "remote-pianobar-melodica"
+    root.mkdir(parents=True, mode=0o700, exist_ok=True)
+    # Keep retries and concurrent player processes isolated by account.
+    prefix = hashlib.sha256(token.encode()).hexdigest()[:24]
+    state = root/(prefix+"-"+str(os.getppid())+".json")
+    with (root/(prefix+".lock")).open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        client = ListenBrainzClient("https://spacegho.st/scrobble", token, str(root/(prefix+"-pending.json")), client="Remote Pianobar Melodica", timeout=4)
+        if event == "songstart":
+            state.write_text(json.dumps([artist, title, int(time.time()), time.monotonic()]))
+            return
+        if not state.exists(): return
+        record = json.loads(state.read_text())
+        state.unlink()
+        if record[:2] != [artist, title]: return
+        duration = float(fields.get("songDuration") or 0)
+        heard = min(float(fields.get("songPlayed") or 0), time.monotonic()-record[3])
+        client.flush()
+        if listen_counts(duration, heard):
+            meta = client.metadata(artist, title, album=fields.get("album"), duration_s=duration, station=fields.get("stationName"))
+            client.listen(meta, record[2])
+
+
+if __name__ == "__main__":
+    os.umask(0o077)
+    payload = sys.stdin.buffer.read()
+    event = sys.argv[1] if len(sys.argv) > 1 else ""
+    try:
+        handle(event, payload)
+    except (OSError, ValueError):
+        pass
+    other = os.environ.get("MELODICA_NEXT_EVENT")
+    if other and Path(other).resolve() != Path(__file__).resolve():
+        sys.exit(subprocess.run([other, event], input=payload).returncode)

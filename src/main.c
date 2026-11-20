@@ -786,12 +786,6 @@ int main (int argc, char **argv) {
 	BarMainSetupSigaction ();
 	BarInterruptSetTarget (&app.doQuit);
 
-	/* init some things */
-	gcry_check_version (NULL);
-	gcry_control (GCRYCTL_DISABLE_SECMEM, 0);
-	gcry_control (GCRYCTL_INITIALIZATION_FINISHED, 0);
-	
-
 	/* Initialize state but NOT player yet - player init must come after daemonization
 	 * because ma_engine_init() opens audio device file descriptors */
 	BarStateInit (&app);

@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include "../../melodica/protocol/relay.h"
 #include <check.h>
 #include <curl/curl.h>
 #include <signal.h>
@@ -299,6 +300,31 @@ START_TEST (test_ui_piano_call_http_hits_progress_cb)
 }
 END_TEST
 
+START_TEST (test_melodica_grant_stays_on_its_relay)
+{
+    char url[512], access[MELODICA_ACCESS_SIZE] = "previous-session";
+    const char *query;
+    char reply[] = "X-Melodica-Access:  fresh-grant \r\n";
+    CURL *http = curl_easy_init();
+    ck_assert_ptr_nonnull(http);
+    MelodicaTunerUrl(url,sizeof(url),"tuner.pandora.com","443","/services/json/?method=auth.userLogin&partner_id=1",true,"android",&query);
+    ck_assert_str_eq(url,"https://spacegho.st/melodica/api/?method=auth.userLogin&partner_id=1");
+    ck_assert_ptr_null(MelodicaRequestHeaders(http,NULL,query,access));
+    ck_assert_str_eq(access,"");
+    ck_assert_uint_eq(MelodicaReadAccess(reply,1,strlen(reply),access),strlen(reply));
+    ck_assert_str_eq(access,"fresh-grant");
+    struct curl_slist *headers = MelodicaRequestHeaders(http,NULL,"?method=user.getStationList",access);
+    ck_assert_ptr_nonnull(headers);
+    ck_assert_str_eq(headers->data,"x-melodica-access: fresh-grant");
+    curl_slist_free_all(headers);
+    MelodicaTunerUrl(url,sizeof(url),"localhost","1234","/services/json/?method=user.getStationList",true,"android",&query);
+    ck_assert_str_eq(url,"https://localhost:1234/services/json/?method=user.getStationList");
+    ck_assert_ptr_null(query);
+    ck_assert_ptr_null(MelodicaRequestHeaders(http,NULL,query,access));
+    curl_easy_cleanup(http);
+}
+END_TEST
+
 Suite *ui_suite (void)
 {
 	Suite *s = suite_create ("ui");
@@ -315,6 +341,7 @@ Suite *ui_suite (void)
 	tcase_add_test (tc, test_progress_cb_returns_interrupt_state);
 	tcase_add_test (tc, test_ui_piano_call_logged_delegates_to_hook);
 	tcase_add_test (tc, test_ui_piano_call_http_hits_progress_cb);
+	tcase_add_test (tc, test_melodica_grant_stays_on_its_relay);
 	tcase_set_timeout (tc, 15);
 	suite_add_tcase (s, tc);
 	return s;

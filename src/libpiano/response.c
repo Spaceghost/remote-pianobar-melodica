@@ -158,7 +158,7 @@ PianoReturn_t PianoResponse (PianoHandle_t *ph, PianoRequest_t *req) {
 					size_t decryptedSize;
 
 					ret = PIANO_RET_ERR;
-					if ((decryptedTimestamp = PianoDecryptString (ph->partner.in,
+					if ((decryptedTimestamp = PianoDecryptString (&ph->partner.in,
 							cryptedTimestamp, &decryptedSize)) != NULL &&
 							decryptedSize > 4) {
 						/* skip four bytes garbage(?) at beginning */

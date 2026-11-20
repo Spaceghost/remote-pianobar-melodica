@@ -55,6 +55,7 @@ typedef struct {
 	 * layouts used by tests; initialized in main after curl_easy_init.
 	 * See THREAD_SAFETY.md. */
 	pthread_mutex_t pianoHttpMutex;
+	char melodicaAccess[4096];
 	/* WebSocket support (conditional compilation) */
 	#ifdef WEBSOCKET_ENABLED
 	void *wsContext;  /* BarWsContext_t */

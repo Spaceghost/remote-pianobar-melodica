@@ -44,21 +44,8 @@ PianoReturn_t PianoInit (PianoHandle_t *ph, const char *partnerUser,
 	ph->partner.password = strdup (partnerPassword);
 	ph->partner.device = strdup (device);
 
-	if (gcry_cipher_open (&ph->partner.in, GCRY_CIPHER_BLOWFISH,
-			GCRY_CIPHER_MODE_ECB, 0) != GPG_ERR_NO_ERROR) {
-		return PIANO_RET_GCRY_ERR;
-	}
-	if (gcry_cipher_setkey (ph->partner.in, (const unsigned char *) inkey,
-			strlen (inkey)) != GPG_ERR_NO_ERROR) {
-		return PIANO_RET_GCRY_ERR;
-	}
-
-	if (gcry_cipher_open (&ph->partner.out, GCRY_CIPHER_BLOWFISH,
-			GCRY_CIPHER_MODE_ECB, 0) != GPG_ERR_NO_ERROR) {
-		return PIANO_RET_GCRY_ERR;
-	}
-	if (gcry_cipher_setkey (ph->partner.out, (const unsigned char *) outkey,
-			strlen (outkey)) != GPG_ERR_NO_ERROR) {
+	if (!melodica_blowfish_init (&ph->partner.in, inkey, strlen (inkey)) ||
+			!melodica_blowfish_init (&ph->partner.out, outkey, strlen (outkey))) {
 		return PIANO_RET_GCRY_ERR;
 	}
 
@@ -179,8 +166,8 @@ static void PianoDestroyPartner (PianoPartner_t *partner) {
 	free (partner->password);
 	free (partner->device);
 	free (partner->authToken);
-	gcry_cipher_close (partner->in);
-	gcry_cipher_close (partner->out);
+	melodica_blowfish_clear (&partner->in);
+	melodica_blowfish_clear (&partner->out);
 	memset (partner, 0, sizeof (*partner));
 }
 
